@@ -27,7 +27,7 @@ parser.add_argument('-s', '--stack-name', dest='stack_name', required=True,
 parser.add_argument('-n', '--initial-events-count', dest='initial_events', required=False,
                     help="Number of initial events. Default is 0", default=0)
 parser.add_argument('-c', '--no-stop-on-complete', action='store_true', dest='continuous', required=False,
-                    help="Don't stop after CREATE_COMPLETE or UPDATE_COMPLETE has reached", default=False)
+                    help="Don't stop after stack has reached *_COMPLETED state", default=False)
 args = parser.parse_args()
 
 initial_events=args.initial_events
