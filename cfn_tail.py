@@ -41,7 +41,7 @@ latest_event = None
 print (f'Tailing {stack_name}')
 
 
-while continuous or (stack.stack_status != "CREATE_COMPLETE" and stack.stack_status != "UPDATE_COMPLETE"):
+while continuous or stack.stack_status.endswith('_IN_PROGRESS'):
     evts, latest_event = get_sorted_cfn_stack_events(stack, latest_event, initial_events)
     for evt in evts:
         status_reason = '' if evt.resource_status_reason is None else str(evt.resource_status_reason)
@@ -49,3 +49,14 @@ while continuous or (stack.stack_status != "CREATE_COMPLETE" and stack.stack_sta
     evts = None
     stack.load()
     sleep(3)
+
+if not continuous:
+    # Stack update failed
+    if stack.stack_status.endswith('_ROLLBACK_COMPLETE'):
+        sys.exit(1)
+    # Stack create/update succeeded
+    elif stack.stack_status.endswith('_COMPLETE'):
+        sys.exit(0)
+    # Stack final state is unknown
+    else:
+        sys.exit(1)
