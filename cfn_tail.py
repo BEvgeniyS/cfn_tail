@@ -52,7 +52,7 @@ while continuous or stack.stack_status.endswith('_IN_PROGRESS'):
 
 if not continuous:
     # Stack update failed
-    if stack.stack_status.endswith('_ROLLBACK_COMPLETE'):
+    if stack.stack_status.endswith('ROLLBACK_COMPLETE'):
         sys.exit(1)
     # Stack create/update succeeded
     elif stack.stack_status.endswith('_COMPLETE'):
