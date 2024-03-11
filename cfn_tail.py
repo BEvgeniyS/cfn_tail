@@ -30,7 +30,7 @@ parser.add_argument('-c', '--no-stop-on-complete', action='store_true', dest='co
                     help="Don't stop after stack has reached *_COMPLETED state", default=False)
 args = parser.parse_args()
 
-initial_events=args.initial_events
+initial_events=int(args.initial_events)
 continuous=args.continuous
 stack_name=args.stack_name
 client = boto3.client('cloudformation')
@@ -40,22 +40,24 @@ latest_event = None
 
 print (f'Tailing {stack_name}')
 
-
-while continuous or stack.stack_status.endswith('_IN_PROGRESS'):
+while continuous or stack.stack_status.endswith('_IN_PROGRESS') or initial_events > 0:
     evts, latest_event = get_sorted_cfn_stack_events(stack, latest_event, initial_events)
     for evt in evts:
         status_reason = '' if evt.resource_status_reason is None else str(evt.resource_status_reason)
         print(f'{evt.timestamp:%Y-%m-%d %H:%M:%S%z} [{evt.logical_resource_id}] {evt.resource_status} {status_reason}')
     evts = None
+    initial_events = 0
     stack.load()
     sleep(3)
 
 if not continuous:
+    # Statuses list:
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-describing-stacks.html
     # Stack update failed
     if stack.stack_status.endswith('ROLLBACK_COMPLETE'):
         sys.exit(1)
     # Stack create/update succeeded
-    elif stack.stack_status.endswith('_COMPLETE'):
+    elif stack.stack_status in ['CREATE_COMPLETE', 'DELETE_COMPLETE', 'UPDATE_COMPLETE', 'IMPORT_COMPLETE']:
         sys.exit(0)
     # Stack final state is unknown
     else:
